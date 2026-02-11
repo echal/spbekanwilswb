@@ -1,0 +1,49 @@
+# ============================================
+# SPBE PROJECT - GIT IGNORE
+# ============================================
+
+# 1. ENVIRONMENT (CRITICAL!)
+.env
+.env.*
+!.env.example
+.phpactor.json
+/auth.json
+
+# 2. DEPENDENCIES
+/vendor/
+/node_modules/
+
+# 3. BUILD FILES
+/public/build
+/public/hot
+/public/storage
+
+# 4. STORAGE
+/storage/*.key
+/storage/pail
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# 5. CACHE
+*.log
+.phpunit.result.cache
+/.phpunit.cache
+
+# 6. IDE
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.zed
+
+# 7. OS FILES
+.DS_Store
+Thumbs.db
+
+# 8. HOMESTEAD
+Homestead.json
+Homestead.yaml
+
+# 9. DATABASE
+*.sql
+*.sqlite

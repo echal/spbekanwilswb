@@ -1,0 +1,55 @@
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║   🚫 JANGAN PUSH FILE INI KE GITHUB! 🚫                  ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+📛 FILE YANG DILARANG:
+
+  1. .env                    → Password, API keys, secrets
+  2. .env.*                  → Semua variant .env
+  3. /vendor/                → Dependencies (size besar)
+  4. /node_modules/          → Dependencies NPM (size sangat besar)
+  5. *.log                   → Log files (bisa contain sensitive data)
+  6. /storage/*.key          → Encryption keys
+  7. /auth.json              → Composer credentials
+  8. *.sql, *.sqlite         → Database backups
+  9. /public/storage/        → User uploads
+ 10. IDE config (.idea, .vscode, dll)
+
+─────────────────────────────────────────────────────────────
+
+✅ YANG AMAN DI-PUSH:
+
+  ✓ .env.example             (template tanpa password)
+  ✓ .gitignore               (file proteksi)
+  ✓ composer.json/lock       (dependency list)
+  ✓ package.json/lock        (npm dependency list)
+  ✓ /app/, /config/, /routes/, /resources/
+  ✓ /database/migrations/    (struktur DB, bukan data)
+
+─────────────────────────────────────────────────────────────
+
+⚡ QUICK CHECK SEBELUM PUSH:
+
+  $ git status               # Lihat file yang akan di-push
+  $ git diff --staged        # Lihat detail perubahan
+  $ git ls-files | grep .env # Pastikan .env tidak ada
+
+─────────────────────────────────────────────────────────────
+
+🚨 JIKA SUDAH TERLANJUR:
+
+  1. LANGSUNG ganti semua password/keys!
+  2. Hubungi Admin/Team Lead
+  3. Hapus dari git history (advanced)
+
+─────────────────────────────────────────────────────────────
+
+💡 TIP: Jangan pakai "git add ."
+     Lebih baik: git add app/ database/ routes/
+
+─────────────────────────────────────────────────────────────
+
+📚 Baca dokumen lengkap: KETENTUAN_GITHUB.md
+
