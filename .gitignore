@@ -47,3 +47,8 @@ Homestead.yaml
 # 9. DATABASE
 *.sql
 *.sqlite
+
+# 10. INTERNAL DOCUMENTATION (Local only)
+KETENTUAN_GITHUB.md
+JANGAN_PUSH.txt
+SECURITY.md
