@@ -28,6 +28,8 @@ class UnitKerjaResource extends Resource
 
     protected static ?string $modelLabel = 'Unit Kerja';
 
+    protected static ?string $pluralModelLabel = 'Unit Kerja';
+
     protected static ?string $slug = 'unit-kerja';
 
     protected static ?int $navigationSort = 1;

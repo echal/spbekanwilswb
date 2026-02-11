@@ -28,6 +28,8 @@ class AplikasiResource extends Resource
 
     protected static ?string $modelLabel = 'Aplikasi';
 
+    protected static ?string $pluralModelLabel = 'Aplikasi';
+
     protected static ?string $slug = 'aplikasi';
 
     protected static ?int $navigationSort = 2;

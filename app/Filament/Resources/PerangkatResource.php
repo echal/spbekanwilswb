@@ -30,6 +30,8 @@ class PerangkatResource extends Resource
 
     protected static ?string $modelLabel = 'Perangkat';
 
+    protected static ?string $pluralModelLabel = 'Perangkat';
+
     protected static ?string $slug = 'perangkat';
 
     protected static ?int $navigationSort = 1;

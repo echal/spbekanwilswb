@@ -28,6 +28,8 @@ class ServerCloudResource extends Resource
 
     protected static ?string $modelLabel = 'Server Cloud';
 
+    protected static ?string $pluralModelLabel = 'Server & Cloud';
+
     protected static ?string $slug = 'server-cloud';
 
     protected static ?int $navigationSort = 3;

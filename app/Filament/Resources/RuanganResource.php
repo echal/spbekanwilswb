@@ -31,6 +31,8 @@ class RuanganResource extends Resource
 
     protected static ?string $modelLabel = 'Ruangan';
 
+    protected static ?string $pluralModelLabel = 'Ruangan';
+
     protected static ?string $slug = 'ruangan';
 
     protected static ?int $navigationSort = 5;

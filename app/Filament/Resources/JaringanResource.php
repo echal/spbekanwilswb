@@ -28,6 +28,8 @@ class JaringanResource extends Resource
 
     protected static ?string $modelLabel = 'Jaringan';
 
+    protected static ?string $pluralModelLabel = 'Jaringan';
+
     protected static ?string $slug = 'jaringan';
 
     protected static ?int $navigationSort = 4;

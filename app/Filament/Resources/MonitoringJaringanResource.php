@@ -28,6 +28,8 @@ class MonitoringJaringanResource extends Resource
 
     protected static ?string $modelLabel = 'Monitoring Jaringan';
 
+    protected static ?string $pluralModelLabel = 'Monitoring Jaringan';
+
     protected static ?string $slug = 'monitoring-jaringan';
 
     protected static ?int $navigationSort = 5;

@@ -30,6 +30,8 @@ class PegawaiResource extends Resource
 
     protected static ?string $modelLabel = 'Pegawai';
 
+    protected static ?string $pluralModelLabel = 'Pegawai';
+
     protected static ?string $slug = 'pegawai';
 
     protected static ?int $navigationSort = 2;
