@@ -22,10 +22,19 @@ class Perangkat extends Model
         'penyimpanan',
         'os',
         'ip_address',
+        'link_eviden',
         'kondisi',
+        'status_kepemilikan',
         'pegawai_id',
         'ruangan_id',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'status_kepemilikan' => 'string',
+        ];
+    }
 
     public function pegawai(): BelongsTo
     {

@@ -72,22 +72,58 @@ class PerangkatResource extends Resource
 
         return $form
             ->schema([
+                Section::make('Status Kepemilikan')
+                    ->schema([
+                        Forms\Components\Select::make('status_kepemilikan')
+                            ->label('Status Kepemilikan')
+                            ->options([
+                                'milik_kantor' => 'Milik Kantor',
+                                'milik_pribadi' => 'Milik Pribadi (BYOD)',
+                                'belum_memiliki' => 'Belum Memiliki Perangkat',
+                                'perangkat_bersama' => 'Perangkat Bersama',
+                            ])
+                            ->required()
+                            ->default('milik_kantor')
+                            ->live()
+                            ->helperText('Status kepemilikan perangkat oleh ASN')
+                            ->columnSpanFull(),
+                    ]),
+
                 Section::make('Identitas Perangkat')
                     ->schema([
                         Forms\Components\TextInput::make('kode_inventaris')
-                            ->required()
+                            ->label('Kode Inventaris')
+                            ->required(fn (callable $get) => in_array($get('status_kepemilikan'), ['milik_kantor', 'perangkat_bersama']))
+                            ->disabled(fn (callable $get) => $get('status_kepemilikan') === 'belum_memiliki')
+                            ->dehydrated(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
                             ->unique(ignoreRecord: true)
                             ->maxLength(255)
-                            ->helperText('Kode inventaris unik perangkat'),
+                            ->helperText(fn (callable $get) =>
+                                $get('status_kepemilikan') === 'milik_kantor' || $get('status_kepemilikan') === 'perangkat_bersama'
+                                    ? 'Wajib diisi untuk perangkat kantor/bersama'
+                                    : 'Opsional untuk perangkat pribadi'
+                            ),
+
                         Forms\Components\TextInput::make('jenis_perangkat')
-                            ->required()
+                            ->label('Jenis Perangkat')
+                            ->required(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
+                            ->disabled(fn (callable $get) => $get('status_kepemilikan') === 'belum_memiliki')
+                            ->dehydrated(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
                             ->maxLength(255)
                             ->helperText('Contoh: Laptop, PC Desktop, Printer'),
+
                         Forms\Components\TextInput::make('merek')
-                            ->required()
+                            ->label('Merek')
+                            ->required(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
+                            ->disabled(fn (callable $get) => $get('status_kepemilikan') === 'belum_memiliki')
+                            ->dehydrated(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
                             ->maxLength(255),
+
                         Forms\Components\TextInput::make('tipe')
-                            ->required()
+                            ->label('Tipe/Model')
+                            ->required(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
+                            ->disabled(fn (callable $get) => $get('status_kepemilikan') === 'belum_memiliki')
+                            ->dehydrated(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
                             ->maxLength(255)
                             ->helperText('Model/tipe perangkat'),
                     ])->columns(2),
@@ -95,20 +131,37 @@ class PerangkatResource extends Resource
                 Section::make('Spesifikasi Teknis')
                     ->schema([
                         Forms\Components\TextInput::make('processor')
+                            ->label('Processor')
+                            ->disabled(fn (callable $get) => $get('status_kepemilikan') === 'belum_memiliki')
+                            ->dehydrated(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
                             ->maxLength(255)
                             ->helperText('Contoh: Intel Core i5-12400'),
+
                         Forms\Components\TextInput::make('ram')
+                            ->label('RAM')
+                            ->disabled(fn (callable $get) => $get('status_kepemilikan') === 'belum_memiliki')
+                            ->dehydrated(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
                             ->maxLength(255)
                             ->helperText('Contoh: 8 GB DDR4'),
+
                         Forms\Components\TextInput::make('penyimpanan')
+                            ->label('Penyimpanan')
+                            ->disabled(fn (callable $get) => $get('status_kepemilikan') === 'belum_memiliki')
+                            ->dehydrated(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
                             ->maxLength(255)
                             ->helperText('Contoh: SSD 256 GB'),
+
                         Forms\Components\TextInput::make('os')
                             ->label('Sistem Operasi')
+                            ->disabled(fn (callable $get) => $get('status_kepemilikan') === 'belum_memiliki')
+                            ->dehydrated(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
                             ->maxLength(255)
                             ->helperText('Contoh: Windows 11 Pro'),
+
                         Forms\Components\TextInput::make('ip_address')
                             ->label('IP Address')
+                            ->disabled(fn (callable $get) => $get('status_kepemilikan') === 'belum_memiliki')
+                            ->dehydrated(fn (callable $get) => $get('status_kepemilikan') !== 'belum_memiliki')
                             ->unique(ignoreRecord: true)
                             ->maxLength(255)
                             ->helperText('Alamat IP perangkat (opsional, harus unik jika diisi)'),
@@ -146,6 +199,17 @@ class PerangkatResource extends Resource
                             ->nullable()
                             ->helperText('Ruangan tempat perangkat berada'),
                     ])->columns(2),
+
+                Section::make('Eviden')
+                    ->schema([
+                        Forms\Components\TextInput::make('link_eviden')
+                            ->label('Link Eviden')
+                            ->url()
+                            ->nullable()
+                            ->prefixIcon('heroicon-o-link')
+                            ->helperText('Masukkan link Google Drive / cloud storage sebagai bukti eviden')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -162,10 +226,41 @@ class PerangkatResource extends Resource
                 }
             })
             ->columns([
-                Tables\Columns\TextColumn::make('kode_inventaris')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('jenis_perangkat')->searchable(),
-                Tables\Columns\TextColumn::make('merek')->searchable(),
-                Tables\Columns\TextColumn::make('tipe'),
+                Tables\Columns\TextColumn::make('kode_inventaris')
+                    ->label('Kode Inventaris')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('status_kepemilikan')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'milik_kantor' => 'Milik Kantor',
+                        'milik_pribadi' => 'BYOD',
+                        'belum_memiliki' => 'Belum Ada',
+                        'perangkat_bersama' => 'Bersama',
+                        default => $state,
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'milik_kantor' => 'success',
+                        'milik_pribadi' => 'info',
+                        'belum_memiliki' => 'warning',
+                        'perangkat_bersama' => 'primary',
+                        default => 'gray',
+                    }),
+
+                Tables\Columns\TextColumn::make('jenis_perangkat')
+                    ->label('Jenis')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('merek')
+                    ->label('Merek')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('tipe')
+                    ->label('Tipe')
+                    ->toggleable(),
+
                 Tables\Columns\TextColumn::make('kondisi')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -173,9 +268,24 @@ class PerangkatResource extends Resource
                         'Rusak Ringan' => 'warning',
                         'Rusak Berat' => 'danger',
                         default => 'gray',
-                    }),
-                Tables\Columns\TextColumn::make('pegawai.nama')->label('Pegawai')->toggleable(),
-                Tables\Columns\TextColumn::make('ruangan.nama_ruangan')->label('Ruangan')->toggleable(),
+                    })
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('pegawai.nama')
+                    ->label('Pegawai')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('ruangan.nama_ruangan')
+                    ->label('Ruangan')
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('link_eviden')
+                    ->label('Link Eviden')
+                    ->url(fn ($record) => $record->link_eviden)
+                    ->openUrlInNewTab()
+                    ->toggleable()
+                    ->placeholder('-'),
+
                 Tables\Columns\TextColumn::make('creator.name')
                     ->label('Operator')
                     ->searchable()
@@ -183,6 +293,23 @@ class PerangkatResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
+                SelectFilter::make('status_kepemilikan')
+                    ->label('Status Kepemilikan')
+                    ->options([
+                        'milik_kantor' => 'Milik Kantor',
+                        'milik_pribadi' => 'Milik Pribadi (BYOD)',
+                        'belum_memiliki' => 'Belum Memiliki',
+                        'perangkat_bersama' => 'Perangkat Bersama',
+                    ]),
+
+                SelectFilter::make('kondisi')
+                    ->label('Kondisi')
+                    ->options([
+                        'Baik' => 'Baik',
+                        'Rusak Ringan' => 'Rusak Ringan',
+                        'Rusak Berat' => 'Rusak Berat',
+                    ]),
+
                 SelectFilter::make('created_by')
                     ->label('Operator')
                     ->options(fn () => User::whereHas('roles', fn ($q) => $q->whereIn('name', ['Admin', 'Operator']))

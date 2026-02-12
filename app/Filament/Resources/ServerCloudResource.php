@@ -95,6 +95,17 @@ class ServerCloudResource extends Resource
                             ->searchable()
                             ->helperText('Klasifikasi keamanan data yang disimpan'),
                     ])->columns(2),
+
+                Section::make('Eviden')
+                    ->schema([
+                        Forms\Components\TextInput::make('link_eviden')
+                            ->label('Link Eviden')
+                            ->url()
+                            ->nullable()
+                            ->prefixIcon('heroicon-o-link')
+                            ->helperText('Masukkan link Google Drive / cloud storage sebagai bukti eviden')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -115,6 +126,12 @@ class ServerCloudResource extends Resource
                 Tables\Columns\TextColumn::make('jumlah_user')->sortable(),
                 Tables\Columns\TextColumn::make('kategori_data')->badge(),
                 Tables\Columns\TextColumn::make('masa_berlaku')->date()->sortable(),
+                Tables\Columns\TextColumn::make('link_eviden')
+                    ->label('Link Eviden')
+                    ->url(fn ($record) => $record->link_eviden)
+                    ->openUrlInNewTab()
+                    ->toggleable()
+                    ->placeholder('-'),
                 Tables\Columns\TextColumn::make('creator.name')
                     ->label('Operator')
                     ->searchable()

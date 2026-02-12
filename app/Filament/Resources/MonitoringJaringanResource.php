@@ -106,6 +106,17 @@ class MonitoringJaringanResource extends Resource
                             ->helperText('Tindakan yang sudah/akan dilakukan')
                             ->columnSpanFull(),
                     ]),
+
+                Section::make('Eviden')
+                    ->schema([
+                        Forms\Components\TextInput::make('link_eviden')
+                            ->label('Link Eviden')
+                            ->url()
+                            ->nullable()
+                            ->prefixIcon('heroicon-o-link')
+                            ->helperText('Masukkan link Google Drive / cloud storage sebagai bukti eviden')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -127,6 +138,12 @@ class MonitoringJaringanResource extends Resource
                         'Putus' => 'danger',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('link_eviden')
+                    ->label('Link Eviden')
+                    ->url(fn ($record) => $record->link_eviden)
+                    ->openUrlInNewTab()
+                    ->toggleable()
+                    ->placeholder('-'),
                 Tables\Columns\TextColumn::make('creator.name')
                     ->label('Operator')
                     ->searchable()

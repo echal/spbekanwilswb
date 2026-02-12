@@ -79,7 +79,25 @@ class AplikasiResource extends Resource
                             ->required()
                             ->searchable()
                             ->helperText('Tingkat kekritisan aplikasi terhadap operasional'),
+                        Forms\Components\TextInput::make('url_aplikasi')
+                            ->label('URL Aplikasi')
+                            ->url()
+                            ->nullable()
+                            ->suffixIcon('heroicon-m-link')
+                            ->helperText('Masukkan alamat website aplikasi (https://...)')
+                            ->columnSpanFull(),
                     ])->columns(2),
+
+                Section::make('Eviden')
+                    ->schema([
+                        Forms\Components\TextInput::make('link_eviden')
+                            ->label('Link Eviden')
+                            ->url()
+                            ->nullable()
+                            ->prefixIcon('heroicon-o-link')
+                            ->helperText('Masukkan link Google Drive / cloud storage sebagai bukti eviden')
+                            ->columnSpanFull(),
+                    ]),
             ]);
     }
 
@@ -105,6 +123,19 @@ class AplikasiResource extends Resource
                         'Rendah' => 'success',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('url_aplikasi')
+                    ->label('URL Aplikasi')
+                    ->formatStateUsing(fn ($state) => $state ? 'Buka Aplikasi' : '-')
+                    ->url(fn ($record) => $record->url_aplikasi)
+                    ->openUrlInNewTab()
+                    ->toggleable()
+                    ->placeholder('-'),
+                Tables\Columns\TextColumn::make('link_eviden')
+                    ->label('Link Eviden')
+                    ->url(fn ($record) => $record->link_eviden)
+                    ->openUrlInNewTab()
+                    ->toggleable()
+                    ->placeholder('-'),
                 Tables\Columns\TextColumn::make('creator.name')
                     ->label('Operator')
                     ->searchable()

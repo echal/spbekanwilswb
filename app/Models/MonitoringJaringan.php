@@ -23,6 +23,7 @@ class MonitoringJaringan extends Model
         'status_koneksi',
         'kendala',
         'tindak_lanjut',
+        'link_eviden',
     ];
 
     protected function casts(): array

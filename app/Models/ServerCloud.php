@@ -20,6 +20,7 @@ class ServerCloud extends Model
         'masa_berlaku',
         'jumlah_user',
         'kategori_data',
+        'link_eviden',
     ];
 
     protected function casts(): array

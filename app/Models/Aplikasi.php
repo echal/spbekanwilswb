@@ -17,6 +17,8 @@ class Aplikasi extends Model
         'jenis',
         'basis',
         'tingkat_kritis',
+        'url_aplikasi',
+        'link_eviden',
     ];
 
     public function pegawai(): BelongsToMany
