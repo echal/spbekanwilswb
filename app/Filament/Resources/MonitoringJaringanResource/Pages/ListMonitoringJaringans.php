@@ -7,7 +7,7 @@ use App\Filament\Resources\MonitoringJaringanResource;
 use App\Models\Jaringan;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Schemas\Components\Select;
+use Filament\Forms\Components\Select;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
