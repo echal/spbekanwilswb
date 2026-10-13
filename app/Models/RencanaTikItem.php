@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RencanaTikItem extends Model
 {
@@ -42,5 +43,21 @@ class RencanaTikItem extends Model
     public function unitKerja(): BelongsTo
     {
         return $this->belongsTo(UnitKerja::class);
+    }
+
+    /**
+     * Semua entri realisasi untuk item ini.
+     */
+    public function realisasi(): HasMany
+    {
+        return $this->hasMany(RealisasiTik::class, 'rencana_item_id');
+    }
+
+    /**
+     * Total realisasi yang sudah disetujui.
+     */
+    public function totalRealisasiDisetujui(): int
+    {
+        return $this->realisasi()->where('status_verifikasi', 'disetujui')->sum('jumlah_realisasi');
     }
 }

@@ -3,7 +3,10 @@
 namespace App\Filament\Widgets;
 
 use App\Services\SpbeEvaluationService;
+use App\Services\SpbeQuarterlyPerformanceService;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
+use Livewire\Attributes\Reactive;
 
 class SpbeUnitChart extends ChartWidget
 {
@@ -13,22 +16,36 @@ class SpbeUnitChart extends ChartWidget
 
     protected static bool $isDiscovered = false;
 
-    public int $tahun;
+    // Reactive: nilai ikut berubah saat filter tahun di DashboardSpbe diganti (hanya dibaca, tidak dimutasi widget)
+    #[Reactive]
+    public ?int $tahun = null;
 
     public static function canView(): bool
     {
         return auth()->user()?->hasAnyRole(['Admin', 'Auditor']) ?? false;
     }
 
-    public function mount(): void
+    public function getDescription(): ?string
     {
-        $this->tahun = $this->tahun ?? now()->year;
+        $tahun = $this->tahun ?? now()->year;
+        $keterangan = "Posisi tahunan {$tahun}, tidak mengikuti filter triwulan. "
+            . 'Komponen Aplikasi tidak disertakan sementara karena target belum dialokasikan per unit.';
+
+        if ($peringatan = app(SpbeQuarterlyPerformanceService::class)->sumberTarget($tahun)['peringatan']) {
+            return $peringatan . ' ' . $keterangan;
+        }
+
+        if (app(SpbeEvaluationService::class)->getByUnit($tahun)->isEmpty()) {
+            return 'Belum ada rencana per unit untuk tahun ini. ' . $keterangan;
+        }
+
+        return $keterangan;
     }
 
     protected function getData(): array
     {
         $service = app(SpbeEvaluationService::class);
-        $data = $service->getByUnit($this->tahun);
+        $data = $service->getByUnit($this->tahun ?? now()->year);
 
         $labels = $data->pluck('unit_kerja')->toArray();
         $values = $data->pluck('persentase')->toArray();
@@ -60,24 +77,30 @@ class SpbeUnitChart extends ChartWidget
         return 'bar';
     }
 
-    protected function getOptions(): array
+    /**
+     * RawJs agar callback dikirim sebagai fungsi JavaScript; opsi berbentuk array
+     * di-encode sebagai JSON sehingga callback berupa string tidak dijalankan Chart.js.
+     */
+    protected function getOptions(): RawJs
     {
-        return [
-            'indexAxis' => 'y',
-            'scales' => [
-                'x' => [
-                    'beginAtZero' => true,
-                    'max' => 100,
-                    'ticks' => [
-                        'callback' => '(value) => value + "%"',
-                    ],
-                ],
-            ],
-            'plugins' => [
-                'legend' => [
-                    'display' => false,
-                ],
-            ],
-        ];
+        return RawJs::make(<<<'JS'
+            {
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: (value) => value + '%',
+                        },
+                    },
+                },
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                },
+            }
+        JS);
     }
 }

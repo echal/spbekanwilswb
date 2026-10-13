@@ -63,10 +63,17 @@ class RencanaTikResource extends Resource
         ];
     }
 
-    // Eager loading untuk mencegah N+1 query
+    // Eager loading untuk mencegah N+1 query.
+    // Operator dibatasi pada rencana di unit yang dikelolanya (berlaku juga untuk akses URL langsung).
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
+        $user = auth()->user();
+
         return parent::getEloquentQuery()
-            ->with(['items', 'creator']);
+            ->with(['items', 'creator'])
+            ->when(
+                $user && ! $user->hasRole('Admin'),
+                fn ($query) => $query->dalamUnitOperator($user),
+            );
     }
 }

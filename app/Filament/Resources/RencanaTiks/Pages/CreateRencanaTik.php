@@ -14,6 +14,11 @@ class CreateRencanaTik extends CreateRecord
         // Set created_by to current user
         $data['created_by'] = auth()->id();
 
+        // Hanya Admin yang boleh menentukan status; rencana baru dari role lain selalu draft
+        if (! auth()->user()?->hasRole('Admin')) {
+            $data['status'] = 'draft';
+        }
+
         return $data;
     }
 }

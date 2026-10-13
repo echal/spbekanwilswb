@@ -3,7 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Services\SpbeEvaluationService;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
+use Livewire\Attributes\Reactive;
 
 class SpbeKategoriChart extends ChartWidget
 {
@@ -13,22 +15,27 @@ class SpbeKategoriChart extends ChartWidget
 
     protected static bool $isDiscovered = false;
 
-    public int $tahun;
+    // Reactive: nilai ikut berubah saat filter tahun di DashboardSpbe diganti (hanya dibaca, tidak dimutasi widget)
+    #[Reactive]
+    public ?int $tahun = null;
 
     public static function canView(): bool
     {
         return auth()->user()?->hasAnyRole(['Admin', 'Auditor']) ?? false;
     }
 
-    public function mount(): void
+    /**
+     * Grafik ini belum mengikuti filter triwulan: tampil sebagai posisi tahunan.
+     */
+    public function getDescription(): ?string
     {
-        $this->tahun = $this->tahun ?? now()->year;
+        return 'Posisi tahunan (kumulatif s.d. 31 Desember ' . ($this->tahun ?? now()->year) . '), tidak mengikuti filter triwulan.';
     }
 
     protected function getData(): array
     {
         $service = app(SpbeEvaluationService::class);
-        $data = $service->getByKategori($this->tahun);
+        $data = $service->getByKategori($this->tahun ?? now()->year);
 
         $labels = $data->pluck('kategori')->map(fn ($k) => ucfirst($k))->toArray();
         $values = $data->pluck('persentase')->toArray();
@@ -60,23 +67,29 @@ class SpbeKategoriChart extends ChartWidget
         return 'bar';
     }
 
-    protected function getOptions(): array
+    /**
+     * RawJs agar callback dikirim sebagai fungsi JavaScript; opsi berbentuk array
+     * di-encode sebagai JSON sehingga callback berupa string tidak dijalankan Chart.js.
+     */
+    protected function getOptions(): RawJs
     {
-        return [
-            'scales' => [
-                'y' => [
-                    'beginAtZero' => true,
-                    'max' => 100,
-                    'ticks' => [
-                        'callback' => '(value) => value + "%"',
-                    ],
-                ],
-            ],
-            'plugins' => [
-                'legend' => [
-                    'display' => false,
-                ],
-            ],
-        ];
+        return RawJs::make(<<<'JS'
+            {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: (value) => value + '%',
+                        },
+                    },
+                },
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                },
+            }
+        JS);
     }
 }

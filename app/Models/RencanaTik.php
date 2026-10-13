@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,6 +45,26 @@ class RencanaTik extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Rencana dalam cakupan Operator: seluruh item berada di unit yang dikelola,
+     * dan rencana memuat item unit tersebut atau dibuat oleh Operator itu sendiri.
+     * Operator tanpa unit tidak memiliki cakupan sama sekali.
+     */
+    public function scopeDalamUnitOperator(Builder $query, User $user): Builder
+    {
+        $unitId = $user->managed_unit_kerja_id;
+
+        if ($unitId === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query
+            ->whereDoesntHave('items', fn (Builder $q) => $q->where('unit_kerja_id', '!=', $unitId))
+            ->where(fn (Builder $q) => $q
+                ->whereHas('items', fn (Builder $i) => $i->where('unit_kerja_id', $unitId))
+                ->orWhere('created_by', $user->id));
     }
 
     // Accessors - Collection-based untuk performance

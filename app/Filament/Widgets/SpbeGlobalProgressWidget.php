@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Services\SpbeEvaluationService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Livewire\Attributes\Reactive;
 
 class SpbeGlobalProgressWidget extends BaseWidget
 {
@@ -14,40 +15,60 @@ class SpbeGlobalProgressWidget extends BaseWidget
     protected static bool $isDiscovered = false;
 
     // Terima filter tahun dari DashboardSpbe page
-    public int $tahun;
+    // Reactive: nilai ikut berubah saat filter tahun di DashboardSpbe diganti (hanya dibaca, tidak dimutasi widget)
+    #[Reactive]
+    public ?int $tahun = null;
 
     public static function canView(): bool
     {
         return auth()->user()?->hasAnyRole(['Admin', 'Auditor']) ?? false;
     }
 
-    public function mount(): void
-    {
-        $this->tahun = $this->tahun ?? now()->year;
-    }
-
     protected function getStats(): array
     {
         $service = app(SpbeEvaluationService::class);
-        $data = $service->getGlobalProgress($this->tahun);
+        $data = $service->getGlobalProgress($this->tahun ?? now()->year);
+
+        // Rincian per komponen; tidak dijumlahkan karena satuan tiap komponen berbeda.
+        // realisasi_kumulatif null = periode belum berjalan (bukan nol).
+        $stats = collect($data['komponen'])
+            ->map(fn (array $k) => Stat::make(
+                $k['label'],
+                ($k['realisasi_kumulatif'] === null ? '–' : number_format($k['realisasi_kumulatif']))
+                    . ' / ' . ($k['target_tahunan'] > 0 ? number_format($k['target_tahunan']) : '–')
+            )
+                ->description(match (true) {
+                    $k['realisasi_kumulatif'] === null => 'Belum berjalan',
+                    $k['persentase'] === null          => 'Target belum ada',
+                    default                            => $k['persentase'] . '%',
+                } . ' · ' . $k['satuan'])
+                ->descriptionIcon('heroicon-m-check-circle')
+                ->color($k['persentase'] === null ? 'gray' : 'primary'))
+            ->values()
+            ->all();
 
         return [
-            Stat::make('Total Direncanakan', number_format($data['total_direncanakan']))
-                ->description('Item infrastruktur TIK')
-                ->descriptionIcon('heroicon-m-clipboard-document-list')
-                ->color('primary'),
+            ...$stats,
 
-            Stat::make('Total Terpenuhi', number_format($data['total_terpenuhi']))
-                ->description('Item terealisasi')
-                ->descriptionIcon('heroicon-m-check-circle')
-                ->color($data['warna']),
-
-            Stat::make('Capaian SPBE', $data['persentase'] . '%')
-                ->description($this->getCapaianLabel($data['persentase']))
+            Stat::make('Capaian SPBE', $data['persentase'] === null ? '–' : $data['persentase'] . '%')
+                ->description($data['persentase'] === null
+                    ? ($data['peringatan_target'] ?? null)
+                        ?: (collect($data['komponen'])->every(fn (array $k) => $k['realisasi_kumulatif'] === null)
+                            ? 'Tahun belum berjalan'
+                            : 'Target belum lengkap: ' . implode(', ', $data['komponen_tanpa_target']))
+                    : $this->getCapaianLabel($data['persentase']) . ' · rata-rata 4 komponen')
                 ->descriptionIcon('heroicon-m-chart-bar')
                 ->color($data['warna'])
-                ->chart($this->getMiniChart($data['persentase'])),
+                ->chart($this->getMiniChart($data['persentase'] ?? 0.0)),
         ];
+    }
+
+    /**
+     * Widget ini belum mengikuti filter triwulan: tampil sebagai posisi tahunan.
+     */
+    protected function getDescription(): ?string
+    {
+        return 'Posisi tahunan (kumulatif s.d. 31 Desember ' . ($this->tahun ?? now()->year) . '), tidak mengikuti filter triwulan.';
     }
 
     protected function getCapaianLabel(float $persentase): string
